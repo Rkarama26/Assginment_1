@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Client App
 
-## Getting Started
+This is the frontend for the assignment project. It is built with Next.js and provides the chat, upload, workspace, and document management interface.
 
-First, run the development server:
+## Project Structure
+
+- app/ - Main app routes and UI pages
+  - app/page.tsx - Home page
+  - app/layout.tsx - Root layout
+  - app/globals.css - Global styles
+  - app/components/ - Reusable UI components
+    - chat-panel.tsx
+    - dashboard.tsx
+    - document-list.tsx
+    - file-upload.tsx
+    - tool-call-log.tsx
+    - workspace-switcher.tsx
+  - app/context/ - React context providers
+- lib/ - Shared frontend utilities and API helpers
+- public/ - Static assets
+- package.json - Client dependencies and scripts
+
+## Prerequisites
+
+Make sure you have installed:
+- Node.js 18 or newer
+- pnpm
+
+## Install Dependencies
+
+From the client folder, run:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If you are using npm instead of pnpm, you can also run:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run the Client
 
-## Learn More
+Start the development server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Then open:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+http://localhost:3000
+```
 
-## Deploy on Vercel
+## Useful Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- pnpm dev - Start the Next.js development server
+- pnpm build - Create a production build
+- pnpm start - Start the production build
+- pnpm lint - Run ESLint checks
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Environment
+
+The client uses environment variables from the .env file. Make sure the following values are present if required by your setup:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+If you do not need a custom API URL, the app will usually work with the default local backend URL.
+
+## Notes
+
+- The client depends on the backend server being up and running.
+- Upload and chat features require the server and worker to be running as well.
