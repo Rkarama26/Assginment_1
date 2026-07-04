@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import workspaceRoutes from "./routes/workspace.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { env, assertRequiredEnv } from "./config/env.js";
+import { getServiceHealth } from "./service/startup.service.js";
 
 dotenv.config();
 assertRequiredEnv();
@@ -22,6 +23,15 @@ app.use(clerkMiddleware());
 
 app.get("/", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+app.get("/health", async (_req, res) => {
+  const services = await getServiceHealth();
+  res.json({
+    status: "ok",
+    services,
+    ingestionReady: services.redis && services.qdrant,
+  });
 });
 
 app.use("/api/workspaces", workspaceRoutes);

@@ -1,48 +1,55 @@
-import { QdrantClient } from "@qdrant/js-client-rest";
+import { QdrantVectorStore } from "@langchain/qdrant";
+import { geminiEmbeddings } from "../ai/embedding.js";
 import { env } from "../config/env.js";
 
-/**
- * @description - ensure vector exists, if not it creates new vector with
- */
+const VECTOR_STORE_COLLECTION_NAME = env.qdrantCollection;
+let vectorStorePromise = null;
 
-const client = new QdrantClient({ url: env.qdrantUrl });
-/**
- * @param {number} vectorSize
- */
-export async function ensureCollection(vectorSize = 768) {
-  const collections = await client.getCollections();
-  const exists = collections.collections.some(
-    (c) => c.name === env.qdrantCollection,
-  );
-
-  if (!exists) {
-    await client.createCollection(env.qdrantCollection, {
-      vectors: { size: vectorSize, distance: "Cosine" },
-    });
+export function resolveVectorDimensions(value) {
+  const parsed = Number(value);
+  if ([768, 1536, 3072].includes(parsed)) {
+    return parsed;
   }
-  // indexing
-  await client
-    .createPayloadIndex(env.qdrantCollection, {
-      field_name: "metadata.workspaceId",
-      field_schema: "keyword",
-    })
-    .catch(() => {});
-
-  await client
-    .createPayloadIndex(env.qdrantCollection, {
-      field_name: "metadata.documentId",
-      field_schema: "keyword",
-    })
-    .catch(() => {});
+  return env.embeddingDimensions;
 }
 
-/**
- * @description - delete documents
- * @param {number} documentId
- */
+function buildVectorStoreConfig(dimensions) {
+  return {
+    url: env.qdrantUrl,
+    collectionName: VECTOR_STORE_COLLECTION_NAME,
+    collectionConfig: {
+      vectors: {
+        size: resolveVectorDimensions(dimensions),
+        distance: "Cosine",
+      },
+    },
+  };
+}
+
+export async function getVectorStore(dimensions = env.embeddingDimensions) {
+  if (!vectorStorePromise) {
+    vectorStorePromise = (async () => {
+      const vectorStore = new QdrantVectorStore(
+        geminiEmbeddings,
+        buildVectorStoreConfig(dimensions),
+      );
+      await vectorStore.ensureCollection();
+      return vectorStore;
+    })();
+  }
+
+  return vectorStorePromise;
+}
+
+export async function ensureCollection(vectorSize = env.embeddingDimensions) {
+  const vectorStore = await getVectorStore(vectorSize);
+  await vectorStore.ensureCollection();
+  return vectorStore;
+}
+
 export async function deleteDocumentVectors(documentId) {
-  await client.delete(env.qdrantCollection, {
-    wait: true,
+  const vectorStore = await getVectorStore();
+  await vectorStore.delete({
     filter: {
       must: [
         {
@@ -54,4 +61,39 @@ export async function deleteDocumentVectors(documentId) {
   });
 }
 
-export { client as qdrantClient };
+export async function searchVectorStore(queryVector, workspaceId, limit = 2) {
+  const vectorStore = await getVectorStore();
+  const results = await vectorStore.similaritySearchVectorWithScore(
+    queryVector,
+    limit,
+    workspaceId
+      ? {
+          must: [
+            {
+              key: "metadata.workspaceId",
+              match: { value: workspaceId },
+            },
+          ],
+        }
+      : undefined,
+  );
+
+  return results.map(([document, score]) => ({
+    score,
+    payload: {
+      content: document.pageContent,
+      metadata: document.metadata,
+    },
+  }));
+}
+
+export const qdrantClient = {
+  async search(_collectionName, options = {}) {
+    const vector = options.vector ?? [];
+    const workspaceId = options.filter?.must?.find(
+      (entry) => entry.key === "metadata.workspaceId",
+    )?.match?.value;
+
+    return searchVectorStore(vector, workspaceId, options.limit ?? 2);
+  },
+};

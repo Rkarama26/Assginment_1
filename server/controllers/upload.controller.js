@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import fs from "fs";
-import { fileQueue } from "../queue/queue.js";
+import { getFileQueue } from "../queue/queue.js";
+import { checkRedisConnection } from "../config/redis.js";
 import {
   createDocument,
   findDocumentByHash,
@@ -27,7 +28,11 @@ export async function uploadPdf(req, res) {
   let document;
 
   if (existing) {
-    await deleteDocumentVectors(existing.id);
+    try {
+      await deleteDocumentVectors(existing.id);
+    } catch {
+      // Qdrant may be temporarily unavailable; worker will clean up on re-index
+    }
     document = await updateDocumentForReupload(existing.id, req.file.path);
   } else {
     document = await createDocument({
@@ -36,9 +41,17 @@ export async function uploadPdf(req, res) {
       storagePath: req.file.path,
       contentHash,
     });
-  } 
+  }
 
-  await fileQueue.add(
+  const redisOk = await checkRedisConnection();
+  if (!redisOk) {
+    return res.status(503).json({
+      error:
+        "Upload queue unavailable. Start Redis/Valkey: docker compose up -d valkey",
+    });
+  }
+
+  await getFileQueue().add(
     "process-document",
     {
       documentId: document.id,

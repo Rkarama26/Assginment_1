@@ -1,17 +1,21 @@
 import app from "./app.js";
 import { initDb } from "./db/init.js";
 import { env } from "./config/env.js";
-import { ensureCollection } from "./service/qdrant.service.js";
-import { geminiEmbeddings } from "./ai/embedding.js";
+import { initializeOptionalServices } from "./service/startup.service.js";
 
 async function start() {
   await initDb();
-
-  const probe = await geminiEmbeddings.embedQuery("init");
-  await ensureCollection(probe.length);
+  console.log("[startup] Database schema initialized");
 
   app.listen(env.port, () => {
-    console.log(`Server running on port ${env.port}`);
+    console.log(`[startup] Server running on http://localhost:${env.port}`);
+    console.log("[startup] Worker must run separately: pnpm run worker");
+  });
+
+  initializeOptionalServices().then((status) => {
+    if (status.redis && status.qdrant) {
+      console.log("[startup] All services ready — uploads and chat enabled");
+    }
   });
 }
 

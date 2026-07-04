@@ -14,6 +14,12 @@ import {
   getDocument,
   listDocuments,
 } from "../controllers/document.controller.js";
+import {
+  getConversationMessages,
+  getConversations,
+  getToolCalls,
+  sendChatMessage,
+} from "../controllers/chat.controller.js";
 import { upload } from "../config/multer.js";
 import { uploadPdf } from "../controllers/upload.controller.js";
 
@@ -46,5 +52,13 @@ router.post(
   uploadPdfMiddleware,
   asyncHandler(uploadPdf),
 );
+
+router.post("/:workspaceId/chat", asyncHandler(sendChatMessage));
+router.get("/:workspaceId/conversations", asyncHandler(getConversations));
+router.get(
+  "/:workspaceId/conversations/:conversationId/messages",
+  asyncHandler(getConversationMessages),
+);
+router.get("/:workspaceId/tool-calls", asyncHandler(getToolCalls));
 
 export default router;

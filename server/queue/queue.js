@@ -1,9 +1,14 @@
 import { Queue } from "bullmq";
-import { env } from "../config/env.js";
+import { getRedisConnection } from "../config/redis.js";
 
-export const fileQueue = new Queue("file-upload-queue", {
-  connection: {
-    host: env.redisHost,
-    port: env.redisPort,
-  },
-});
+/** @type {Queue | null} */
+let fileQueue = null;
+
+export function getFileQueue() {
+  if (!fileQueue) {
+    fileQueue = new Queue("file-upload-queue", {
+      connection: getRedisConnection(),
+    });
+  }
+  return fileQueue;
+}
