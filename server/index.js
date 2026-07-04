@@ -2,6 +2,7 @@ import app from "./app.js";
 import { initDb } from "./db/init.js";
 import { env } from "./config/env.js";
 import { initializeOptionalServices } from "./service/startup.service.js";
+import { startWorker } from "./worker.js";
 
 async function start() {
   await initDb();
@@ -9,7 +10,6 @@ async function start() {
 
   app.listen(env.port, () => {
     console.log(`[startup] Server running on http://localhost:${env.port}`);
-    console.log("[startup] Worker must run separately: pnpm run worker");
   });
 
   initializeOptionalServices().then((status) => {
@@ -17,6 +17,8 @@ async function start() {
       console.log("[startup] All services ready — uploads and chat enabled");
     }
   });
+
+  await startWorker();
 }
 
 start().catch((err) => {

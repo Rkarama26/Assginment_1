@@ -7,7 +7,7 @@ import { processPdf } from "./service/pdf.service.js";
 
 dotenv.config();
 
-async function startWorker() {
+export async function startWorker() {
   const redisOk = await checkRedisConnection();
   if (!redisOk) {
     console.error(
@@ -42,8 +42,3 @@ async function startWorker() {
 
   console.log("[worker] Ingestion worker started — waiting for upload jobs");
 }
-
-startWorker().catch((err) => {
-  console.error("[worker] Failed to start:", err.message);
-  process.exit(1);
-});
