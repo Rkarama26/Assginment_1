@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon app.js",
+    "dev": "node --watch index.js",
     "start": "node index.js",
     "worker": "node worker.js"
   },
@@ -26,7 +26,6 @@
     "@langchain/core": "^1.2.1",
     "@langchain/google-genai": "^2.2.0",
     "@langchain/openai": "^1.5.3",
-    "@langchain/pgvector": "^0.1.0",
     "@langchain/qdrant": "^1.0.3",
     "@langchain/tavily": "^1.2.0",
     "@langchain/textsplitters": "^1.0.1",

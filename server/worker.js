@@ -7,16 +7,16 @@ import { processPdf } from "./service/pdf.service.js";
 
 dotenv.config();
 
-export async function startWorker() {
+export async function startWorker() { 
   const redisOk = await checkRedisConnection();
   if (!redisOk) {
-    console.error(
+    console.error( 
       "[worker] Cannot connect to Redis/Valkey at",
       `${env.redisHost}:${env.redisPort}`,
     );
     console.error(
       "[worker] Start Docker Desktop, then run: docker compose up -d valkey qdrant",
-    );
+    );  
     process.exit(1);
   }
 

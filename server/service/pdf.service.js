@@ -1,7 +1,7 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { setDocumentStatus } from "../repositories/document.repository.js";
-import { deleteDocumentVectors, getVectorStore } from "./qdrant.service.js";
+import { deleteDocumentVectors, getPgVector_Store } from "./qdrant.service.js";
 
 /**
  * @title - processPdf
@@ -28,10 +28,10 @@ export async function processPdf(data) {
       chunkOverlap: 200,
     });
 
-    console.time("split");
+    console.time("split"); 
     const chunks = await splitter.splitDocuments(docs);
-    console.timeEnd("split");
-
+    console.timeEnd("split");  
+ 
     chunks.forEach((chunk, index) => {
       chunk.metadata = {
         ...chunk.metadata,
@@ -51,12 +51,14 @@ export async function processPdf(data) {
      * @dev store embeddings into the Qdrant-backed store
      */
     console.time("embed");
-    const vectorStore = await getVectorStore();
+    const vectorStore = await getPgVector_Store();
     console.timeEnd("embed");
     console.log("chunks length:", chunks.length);
     if (chunks.length > 0) {
       console.time("upsert");
+      // console.log(vectorStore.constructor.name);
       await vectorStore.addDocuments(chunks);
+      console.log("upserted chunks length in pgvector:", chunks.length);
       console.timeEnd("upsert");
     }
 

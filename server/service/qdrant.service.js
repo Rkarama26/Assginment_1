@@ -1,10 +1,14 @@
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { geminiEmbeddings } from "../ai/embedding.js";
 import { env } from "../config/env.js";
+import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 
+// rag_chunks
 const VECTOR_STORE_COLLECTION_NAME = env.qdrantCollection;
+// chache promise - prevents multiple connections to Qdrant when multiple requests come in at the same time
 let vectorStorePromise = null;
 
+// validate the embedding dimensions and return a valid value
 export function resolveVectorDimensions(value) {
   const parsed = Number(value);
   if ([768, 1536, 3072].includes(parsed)) {
@@ -13,6 +17,7 @@ export function resolveVectorDimensions(value) {
   return env.embeddingDimensions;
 }
 
+// build the config for the QdrantVectorStore
 function buildVectorStoreConfig(dimensions) {
   return {
     url: env.qdrantUrl,
@@ -26,74 +31,66 @@ function buildVectorStoreConfig(dimensions) {
   };
 }
 
-export async function getVectorStore(dimensions = env.embeddingDimensions) {
+export async function getPgVector_Store() {
   if (!vectorStorePromise) {
-    vectorStorePromise = (async () => {
-      const vectorStore = new QdrantVectorStore(
-        geminiEmbeddings,
-        buildVectorStoreConfig(dimensions),
-      );
-      await vectorStore.ensureCollection();
-      return vectorStore;
-    })();
+    vectorStorePromise = PGVectorStore.initialize(geminiEmbeddings, {
+      postgresConnectionOptions: {
+        connectionString: env.databaseUrl,
+      },
+
+      tableName: "chunks",
+
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "embedding",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    });
   }
 
   return vectorStorePromise;
 }
 
+// ensure the collection exists and return the vector store
 export async function ensureCollection(vectorSize = env.embeddingDimensions) {
-  const vectorStore = await getVectorStore(vectorSize);
+  const vectorStore = await getPgVector_Store(vectorSize);
   await vectorStore.ensureCollection();
   return vectorStore;
 }
 
+// delete all vectors for a given documentId
 export async function deleteDocumentVectors(documentId) {
-  const vectorStore = await getVectorStore();
+  if (!documentId) {
+    throw new Error("documentId is required to delete vectors");
+  }
+
+  const vectorStore = await getPgVector_Store();
+
+  // PGVectorStore filter format: flat object matched against metadata JSONB keys
   await vectorStore.delete({
-    filter: {
-      must: [
-        {
-          key: "metadata.documentId",
-          match: { value: documentId },
-        },
-      ],
-    },
+    filter: { documentId },
   });
 }
 
+//retrieval of vectors from the vector store based on a query vector and optional workspaceId
 export async function searchVectorStore(queryVector, workspaceId, limit = 2) {
-  const vectorStore = await getVectorStore();
+  if (!workspaceId) {
+    // never allow an unscoped search across all workspaces
+    throw new Error("workspaceId is required for scoped retrieval");
+  }
+  const vectorStore = await getPgVector_Store();
   const results = await vectorStore.similaritySearchVectorWithScore(
     queryVector,
     limit,
-    workspaceId
-      ? {
-          must: [
-            {
-              key: "metadata.workspaceId",
-              match: { value: workspaceId },
-            },
-          ],
-        }
-      : undefined,
+    { workspaceId },
   );
-
-  return results.map(([document, score]) => ({
-    score,
+  // console.log("results from searchVectorStore:", results);
+  return results.map(([document, distance]) => ({
+    score: 1 - distance,
     payload: {
       content: document.pageContent,
       metadata: document.metadata,
     },
   }));
 }
-
-export const qdrantClient = {
-  async search(_collectionName, options = {}) {
-    const vector = options.vector ?? [];
-    const workspaceId = options.filter?.must?.find(
-      (entry) => entry.key === "metadata.workspaceId",
-    )?.match?.value;
-
-    return searchVectorStore(vector, workspaceId, options.limit ?? 2);
-  },
-};

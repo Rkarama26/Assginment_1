@@ -1,6 +1,6 @@
-import { qdrantClient } from "./qdrant.service.js";
 import { geminiEmbeddings } from "../ai/embedding.js";
 import { env } from "../config/env.js";
+import { searchVectorStore } from "./qdrant.service.js";
 
 const SCORE_THRESHOLD = 0.55;
 const TOP_K = 2;
@@ -12,20 +12,9 @@ const TOP_K = 2;
 export async function retrieveWorkspaceChunks(workspaceId, query) {
   const vector = await geminiEmbeddings.embedQuery(query);
 
-  const results = await qdrantClient.search(env.qdrantCollection, {
-    vector,
-    limit: TOP_K,
-    with_payload: true,
-    filter: {
-      must: [
-        {
-          key: "metadata.workspaceId",
-          match: { value: workspaceId },
-        },
-      ],
-    },
-  });
+  const results = await searchVectorStore(vector, workspaceId, TOP_K);
 
+  //  console.log("results from rag-service:", results);
   return results
     .filter((hit) => hit.score >= SCORE_THRESHOLD)
     .map((hit) => ({

@@ -72,3 +72,15 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tasks_workspace_id ON tasks (workspace_id);
+
+CREATE TABLE IF NOT EXISTS chunks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  embedding VECTOR(1536) NOT NULL,
+  metadata JSONB DEFAULT '{}'
+  );
+
+
+CREATE INDEX IF NOT EXISTS idx_chunks_embedding
+ON chunks
+USING hnsw (embedding vector_cosine_ops);  
