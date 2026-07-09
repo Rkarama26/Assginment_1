@@ -15,16 +15,14 @@ function normalizeEmbeddingDimensions(value) {
 export const env = {
   port: Number(process.env.PORT) || 8000,
   databaseUrl: process.env.DATABASE_URL,
-  redisHost: process.env.REDIS_HOST || "127.0.0.1",
-  redisPort: Number(process.env.REDIS_PORT) || 6379,
-  qdrantUrl: process.env.QDRANT_URL || "http://localhost:6333",
   qdrantCollection: process.env.QDRANT_COLLECTION || "rag_chunks",
   googleApiKey: process.env.GOOGLE_API_KEY,
   clerkSecretKey: process.env.CLERK_SECRET_KEY,
   clerkPublishable: process.env.CLERK_PUBLISHABLE_KEY,
-  slackWebhookUrl: process.env.SLACK_WEBHOOK_URL,
-  discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL,
-  redisUrl: process.env.REDIS_URL,
+  redisUrl: process.env.UPSTASH_REDIS_URL, 
+  clientUrls: process.env.CLIENT_URL
+    ? process.env.CLIENT_URL.split(",").map((url) => url.trim())
+    : ["http://localhost:3000"],
   embeddingDimensions: normalizeEmbeddingDimensions(
     process.env.EMBEDDING_DIMENSIONS,
   ),

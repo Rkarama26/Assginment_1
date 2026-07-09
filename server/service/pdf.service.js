@@ -1,7 +1,7 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { setDocumentStatus } from "../repositories/document.repository.js";
-import { deleteDocumentVectors, getPgVector_Store } from "./qdrant.service.js";
+import { deleteDocumentVectors, getPgVector_Store } from "./vector.service.js";
 
 /**
  * @title - processPdf

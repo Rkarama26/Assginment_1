@@ -1,6 +1,6 @@
 import { geminiEmbeddings } from "../ai/embedding.js";
 import { env } from "../config/env.js";
-import { searchVectorStore } from "./qdrant.service.js";
+import { searchVectorStore } from "./vector.service.js";
 
 const SCORE_THRESHOLD = 0.55;
 const TOP_K = 2;

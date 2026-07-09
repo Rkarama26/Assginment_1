@@ -7,16 +7,14 @@ import { processPdf } from "./service/pdf.service.js";
 
 dotenv.config();
 
-export async function startWorker() { 
+export async function startWorker() {
   const redisOk = await checkRedisConnection();
+  const client = await getRedisConnection();
   if (!redisOk) {
-    console.error( 
-      "[worker] Cannot connect to Redis/Valkey at",
-      `${env.redisHost}:${env.redisPort}`,
-    );
+    console.error("[worker] Cannot connect to Redis", `$at: ${client.url}`);
     console.error(
-      "[worker] Start Docker Desktop, then run: docker compose up -d valkey qdrant",
-    );  
+      "[worker] Unable to connect to Redis. Check your UPSTASH_REDIS_URL.",
+    );
     process.exit(1);
   }
 

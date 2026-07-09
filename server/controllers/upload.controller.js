@@ -7,7 +7,7 @@ import {
   findDocumentByHash,
   updateDocumentForReupload,
 } from "../repositories/document.repository.js";
-import { deleteDocumentVectors } from "../service/qdrant.service.js";
+import { deleteDocumentVectors } from "../service/vector.service.js";
 
 function hashFile(path) {
   const buffer = fs.readFileSync(path);

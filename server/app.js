@@ -10,11 +10,11 @@ import { getServiceHealth } from "./service/startup.service.js";
 dotenv.config();
 assertRequiredEnv();
 
-const app = express();
+const app = express();  
 
-app.use(
+app.use( 
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: env.clientUrls,
     credentials: true,
   }),
 );

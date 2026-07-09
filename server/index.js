@@ -12,11 +12,11 @@ async function start() {
     console.log(`[startup] Server running on http://localhost:${env.port}`);
   });
 
-  // initializeOptionalServices().then((status) => {
-  //   if (status.redis && status.qdrant) {
-  //     console.log("[startup] All services ready — uploads and chat enabled");
-  //   }
-  // });
+  initializeOptionalServices().then((status) => {
+    if (status.redis && status.qdrant) {
+      console.log("[startup] All services ready — uploads and chat enabled");
+    }
+  });
 
   await startWorker();
 }
