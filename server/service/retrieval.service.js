@@ -2,14 +2,15 @@ import { geminiEmbeddings } from "../ai/embedding.js";
 import { env } from "../config/env.js";
 import { searchVectorStore } from "./vector.service.js";
 
-const SCORE_THRESHOLD = 0.55;
-const TOP_K = 2;
+export const SCORE_THRESHOLD = 0.55;
+export const TOP_K = 3;
 
 /**
  * @param {string} workspaceId
  * @param {string} query
  */
 export async function retrieveWorkspaceChunks(workspaceId, query) {
+  // query to vector embedding
   const vector = await geminiEmbeddings.embedQuery(query);
 
   const results = await searchVectorStore(vector, workspaceId, TOP_K);
@@ -48,5 +49,3 @@ export function chunksToCitations(chunks) {
     score: chunk.score,
   }));
 }
-
-export { SCORE_THRESHOLD };

@@ -8,8 +8,8 @@ import {
   touchConversation,
 } from "../repositories/chat.repository.js";
 import { listToolCallsByWorkspace } from "../repositories/tool-call.repository.js";
-import { runChatWithTools } from "../service/chat.service.js";
 import { pool } from "../config/db.js";
+import { runChatWithTools } from "../chat/chat.service.js";
 
 async function runAssistantTurn({
   workspaceId,

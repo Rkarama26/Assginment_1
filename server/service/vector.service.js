@@ -8,14 +8,7 @@ const VECTOR_STORE_COLLECTION_NAME = env.qdrantCollection;
 // chache promise - prevents multiple connections to Qdrant when multiple requests come in at the same time
 let vectorStorePromise = null;
 
-// validate the embedding dimensions and return a valid value
-export function resolveVectorDimensions(value) {
-  const parsed = Number(value);
-  if ([768, 1536, 3072].includes(parsed)) {
-    return parsed;
-  }
-  return env.embeddingDimensions;
-}
+
 
 // build the config for the QdrantVectorStore
 function buildVectorStoreConfig(dimensions) {
