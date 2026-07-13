@@ -11,13 +11,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.3.0",
-      "onFail": "download"
-    }
-  },
+  "packageManager": "pnpm@11.3.0",
   "type": "module",
   "dependencies": {
     "@clerk/express": "^2.1.35",
